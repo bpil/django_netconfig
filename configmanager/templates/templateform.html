@@ -1,0 +1,78 @@
+{% csrf_token %}
+{% load static %}
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=ASCII"> 
+	<link rel="stylesheet" href="{% static 'css/brutusin-json-forms.css' %}"/>
+	<link rel="stylesheet" href="{% static 'css/codemirror.css' %}"/>
+	<style>
+		img {
+			max-width: 100%
+		}
+		.CodeMirror {
+			height: 400px; 
+		}
+	</style>
+	<script src="{% static 'js/brutusin-json-forms.min.js' %}"></script>
+	<script lang="javascript">
+		var BrutusinForms = brutusin["json-forms"];
+		var schema = {{ jsonData |safe }};
+		var bf = BrutusinForms.create(schema);
+		function generateForm() {
+			var data = {}
+			var container = document.getElementById('container');
+			bf.render(container, data);
+		}
+		function reqListener() {
+			var txt = this.response;
+			var t=document.createElement("P");
+			t.innerHTML = txt
+			var c=document.getElementById('configuration');
+			while (c.firstChild) {
+                    c.removeChild(c.firstChild);
+            }
+			c.appendChild(t)
+		}
+		function sendData() {
+			var template = document.getElementById('template');
+			var templateName = template.innerHTML
+			var dictData = { 
+				"templateName": templateName,
+				"params": bf.getData()
+			}
+			var formData = JSON.stringify(dictData, null, 4);
+			var oReq = new XMLHttpRequest();
+			oReq.addEventListener("load", reqListener);
+			oReq.open("POST", "render/");
+			oReq.setRequestHeader('Content-Type', 'application/json');
+			oReq.send(formData);
+		}
+	</script>
+
+
+
+
+</head>
+<body onload="generateForm();">
+	<div class="container" >
+		<blockquote>
+			<p><b>SFR Network Config Generator</b></p> 
+			<p>Source code and documentation available at <a href="https://github.com/bpil/django_netconfig"><span class="octicon octicon-logo-github"></span></a></p>
+			<p>Based on Django Framework, Jinja2 template framework and <a href="https://github.com/brutusin/json-forms">Brutusin JSON Forms</a>.</p>
+			<p>Backend provided by <a href="https://github.com/bpil/flaskit">Flaskit</a>.</p>
+		</blockquote>
+	</div>
+	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    	<div class="panel panel-primary">
+			<div id="collapseForm" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+            	<div class="alert alert-info" role="alert"><strong id="example-title"></strong><div id="example-desc"></div></div>
+            		<div id='template' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;">{{ templateName }}</div>
+                	<div id='container' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;"></div>
+                	<div id='configuration' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;"></div>
+                   	<div class="panel-footer">
+                        	<button class="btn btn-primary" onclick="alert(JSON.stringify(bf.getData(), null, 4))">getData()</button>&nbsp;<button class="btn btn-primary" onclick="sendData()">Render Configuration</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
