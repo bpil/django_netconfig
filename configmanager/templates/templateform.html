@@ -1,7 +1,9 @@
 {% csrf_token %}
 {% load static %}
 <head>
-	<meta http-equiv="Content-Type" content="text/html;charset=ASCII"> 
+	<meta http-equiv="Content-Type" content="text/html;charset=ASCII">
+	<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"/>
+	<link rel="stylesheet" href="{% static 'css/bootstrap-select.min.css' %}"/>
 	<link rel="stylesheet" href="{% static 'css/brutusin-json-forms.css' %}"/>
 	<link rel="stylesheet" href="{% static 'css/codemirror.css' %}"/>
 	<style>
@@ -12,14 +14,24 @@
 			height: 400px; 
 		}
 	</style>
+	<script src="{% static 'js/jquery-1.11.3.min.js' %}"></script>
+	<script src="{% static 'js/markdown.min.js' %}"></script>
+	<script src="{% static 'js/bootstrap.min.js' %}"></script>
+	<script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+	<script src="{% static 'js/i18n/defaults-en_US.min.js' %}"></script>
+	<script src="{% static 'js/codemirror.js' %}"></script>
+	<script src="{% static 'js/codemirror-javascript.js' %}"></script>
 	<script src="{% static 'js/brutusin-json-forms.min.js' %}"></script>
+	<script src="{% static 'js/brutusin-json-forms-bootstrap.min.js' %}"></script>
 	<script lang="javascript">
 		var BrutusinForms = brutusin["json-forms"];
-		var schema = {{ jsonData |safe }};
-		var bf = BrutusinForms.create(schema);
+		var templateList = {{ jsonData |safe }};
 		function generateForm() {
 			var data = {}
 			var container = document.getElementById('container');
+			while(container.firstChild) {
+				container.removeChild(container.firstChild);
+			}
 			bf.render(container, data);
 		}
 		function reqListener() {
@@ -32,13 +44,24 @@
             }
 			c.appendChild(t)
 		}
+		function selectListener() {
+			var schema = JSON.parse(this.response);
+			var data = {};
+			var container = document.getElementById('container');
+			bf = BrutusinForms.create(schema);
+			while(container.firstChild) {
+				container.removeChild(container.firstChild);
+			}
+			bf.render(container, data);
+		}
 		function sendData() {
 			var template = document.getElementById('template');
-			var templateName = template.innerHTML
+			var ctrlTemplate = document.getElementById('templateList');
+			var templateName = templateList[ctrlTemplate.selectedIndex];
 			var dictData = { 
 				"templateName": templateName,
 				"params": bf.getData()
-			}
+			};
 			var formData = JSON.stringify(dictData, null, 4);
 			var oReq = new XMLHttpRequest();
 			oReq.addEventListener("load", reqListener);
@@ -46,33 +69,72 @@
 			oReq.setRequestHeader('Content-Type', 'application/json');
 			oReq.send(formData);
 		}
+		function selectTemplate() {
+			var ctrlTemplate = document.getElementById('templateList');
+			var templateName = templateList[ctrlTemplate.selectedIndex];
+			var dictData = {
+				"templateName": templateName
+			}
+			var formData = JSON.stringify(dictData, null, 4);
+			var oReq = new XMLHttpRequest();
+			oReq.addEventListener("load", selectListener);
+			oReq.open("POST", "/configmanager/get/")
+			oReq.setRequestHeader('Content-Type', 'application/json');
+			oReq.send(formData);
+		}
 	</script>
-
-
-
-
 </head>
-<body onload="generateForm();">
+<body>
 	<div class="container" >
 		<blockquote>
-			<p><b>SFR Network Config Generator</b></p> 
+			<p><b>Network Config Generator</b></p> 
 			<p>Source code and documentation available at <a href="https://github.com/bpil/django_netconfig"><span class="octicon octicon-logo-github"></span></a></p>
 			<p>Based on Django Framework, Jinja2 template framework and <a href="https://github.com/brutusin/json-forms">Brutusin JSON Forms</a>.</p>
 			<p>Backend provided by <a href="https://github.com/bpil/flaskit">Flaskit</a>.</p>
 		</blockquote>
-	</div>
+	<div class="panel-body">
+        <label for="templateList">Available Templates:</label>
+        <select class="form-control" id="templateList" onchange="selectTemplate();">
+            {% for name in jsonData %}
+            <option>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </div>
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
     	<div class="panel panel-primary">
-			<div id="collapseForm" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+    	<div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a class="collapsed" id="paramControl" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseParams" aria-expanded="false" aria-controls="collapseParams">
+                                Parametres
+                            </a>
+                        </h4>
+                    </div>
+			<div id="collapseParams" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
             	<div class="alert alert-info" role="alert"><strong id="example-title"></strong><div id="example-desc"></div></div>
             		<div id='template' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;">{{ templateName }}</div>
                 	<div id='container' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;"></div>
+                   	<div class="panel-footer">
+                        	<button class="btn btn-primary" onclick="sendData()">Render Configuration</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-primary">
+        <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                            <a class="collapsed" id="formLink" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
+                                Configuration
+                            </a>
+                        </h4>
+                    </div>
+			<div id="collapseForm" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+            	<div class="alert alert-info" role="alert"><strong id="example-title"></strong><div id="example-desc"></div></div>
                 	<div id='configuration' style="padding-left:12px;padding-right:12px;padding-bottom: 12px;"></div>
                    	<div class="panel-footer">
-                        	<button class="btn btn-primary" onclick="alert(JSON.stringify(bf.getData(), null, 4))">getData()</button>&nbsp;<button class="btn btn-primary" onclick="sendData()">Render Configuration</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+	</div>
 </body>

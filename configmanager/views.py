@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, render_to_response
 
 
@@ -29,15 +29,11 @@ def index(request):
 	return render_to_response("index.html", { 'form': form, 'data': data}, RequestContext(request))
 
 def template(request):
-	data = request.POST.dict()
-	if 'templateName' not in data.keys():
-		return HttpResponse("Template Check Done")
-	templateName = data['templateName']
-
-	f = urllib2.urlopen('http://127.0.0.1:5000/templatize/' + templateName)
+	f = urllib2.urlopen('http://127.0.0.1:5000/templatize')
 	src = f.read()
 	data = json.loads(src)
-	return render_to_response('templateform.html', context={'templateName': templateName, 'jsonData': src})
+	tgtData = [ str(k) for k in data['templates'] ]
+	return render_to_response('templateform.html', context={'jsonData': tgtData})
 
 def render(request):
 	reqData = json.loads(request.body)
@@ -48,3 +44,12 @@ def render(request):
 	src = f.read()
 	print type(src)
 	return HttpResponse(src.replace("\\n", "<br>").replace('\"', '', 1))
+
+def getTemplate(request):
+	reqData = json.loads(request.body)
+	templateName = reqData['templateName']
+	print templateName
+	f = urllib2.urlopen('http://127.0.0.1:5000/templatize/' + templateName)
+	src = f.read()
+	data = json.loads(src)
+	return JsonResponse(data)
