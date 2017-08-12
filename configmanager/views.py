@@ -5,28 +5,12 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, render_to_response
 
 
-import dynaform, urllib2, json
+import urllib2, json
 
 from django.template import RequestContext
 
 
 # Create your views here.
-
-def index(request):
-	f = urllib2.urlopen('http://127.0.0.1:5000/templatize')
-	json_form = f.read()
-	d = json.loads(json_form)
-	formEntry = [ { 'name': 'templateName', 'label': 'Template', 'type': 'select', 'choices': [ {'name': k, 'value': k } for k in d['templates']]}]
-	json_form = json.dumps(formEntry)
-	form_class = dynaform.get_form(json_form)
-	data = {}
-	if request.method == 'POST':
-		form = form_class(request.POST)
-		if form.is_valid():
-			data = form.cleaned_data
-	else:
-		form = form_class()
-	return render_to_response("index.html", { 'form': form, 'data': data}, RequestContext(request))
 
 def template(request):
 	f = urllib2.urlopen('http://127.0.0.1:5000/templatize')

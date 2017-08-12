@@ -99,4 +99,7 @@ ENV/
 .mypy_cache/
 
 # SQLITE
-.sqlite3
+*.sqlite3
+
+# Compiled python
+*.pyc
