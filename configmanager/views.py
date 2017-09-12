@@ -19,8 +19,9 @@ def template(request):
 	src = f.read()
 	data = json.loads(src)
 	tgtData = [ str(k) for k in data['templates'] ]
-	localaddr = cfg.get('frontend', 'ip')
-	return render_to_response('templateform.html', context={'jsonData': tgtData, 'localaddr': localaddr})
+	localaddr = cfg.get('nginx', 'ip')
+	staticport = cfg.get('nginx', 'port')
+	return render_to_response('templateform.html', context={'jsonData': tgtData, 'localaddr': localaddr, 'staticport': staticport})
 
 def render(request):
 	cfg = ConfigParser.ConfigParser()
