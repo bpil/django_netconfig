@@ -36,13 +36,13 @@
 		}
 		function reqListener() {
 			var txt = this.response;
-			var t=document.createElement("P");
-			t.innerHTML = txt
+			var p=document.createElement("PRE");
+			p.innerHTML = txt
 			var c=document.getElementById('configuration');
 			while (c.firstChild) {
                     c.removeChild(c.firstChild);
             }
-			c.appendChild(t)
+			c.appendChild(p)
 		}
 		function selectListener() {
 			var schema = JSON.parse(this.response);

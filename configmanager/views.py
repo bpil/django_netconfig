@@ -27,7 +27,9 @@ def render(request):
 	f = urllib2.urlopen(req)
 	src = f.read()
 	print type(src)
-	return HttpResponse(src.replace("\\n", "<br>").replace('\"', '', 1))
+	return HttpResponse(src.replace("\\n", "<br>")[1:-2])
+#	return HttpResponse(src.replace("\\n", "\\r\\n").replace('\"', '', 1))
+#	return HttpResponse(src.replace('\"', '', 1))
 
 def getTemplate(request):
 	reqData = json.loads(request.body)
